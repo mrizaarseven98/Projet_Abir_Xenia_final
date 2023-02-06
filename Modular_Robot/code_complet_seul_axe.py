@@ -16,14 +16,19 @@ file_out_pts_3Dto2D     = "image_pts_3Dto2D"
 file_out_img_ok         = "image_treter"
 
 name_txt_file = "data_triang_bord.txt"
-flag_ecritur = True
+flag_ecritur = False
 
 tps1 = time.process_time()
 
 #les coordoné 3D des points a placer en cm
 h = 1.2         #hauteur du robeaut
-pts_centre = [[0,10,h], [-15,25,h], [-30,0,h]]
-pts_coin = [[-4.4,11.5,h], [5,11.5,h], [0.25,19.7,h], [-15.25,15.3,h], [-20,23.5,h], [-10.6,23.5,h], [-28.5,4.4,h], [-28.5,-5,h], [-20.3,-0.25,h]]
+#pts_centre = [[0,10,h], [-15,25,h], [-30,0,h]]
+#pts_centre = [[-24.9,16.2,h], [-38.9,26.4,h], [-44.4,8.7,h], [-35.9,-5.3, h]]
+pts_centre=[[-15,0,h]]
+pts_coin=[[-19.4,1.5,h], [-9.4,1.5,h], [-14.55,10.3,h]]
+#pts_coin = [[-4.4,11.5,h], [5,11.5,h], [0.25,19.7,h], [-15.25,15.3,h], [-20,23.5,h], [-10.6,23.5,h], [-28.5,4.4,h], [-28.5,-5,h], [-20.3,-0.25,h]]
+#pts_coin = [[-5,16.5,h], [-14.4,16.5,h], [-9.75,24.7,h], [-32.5,14.6,h], [-32.5,5.2,h], [-24.3,9.95,h], [-29.7,0.25,h], [-21.5,5,h], [-21.5,-4.4,h], [-32.5,-4.1,h], [-32.5,-13.5,h], [-24.3,-8.75,h]]
+#pts_coin = [[-26.4, 11.8,h], [-34.6, 16.45,h], [-26.4, 21.2,h],  [-37.4, 30.8,h], [-29.2, 26.15,h], [-37.4,21.4,h],  [-40,7.2,h], [-44.65,-1,h],[-49.4,7.2,h], [-40.3,-3.8, h], [-35.65, 4.4, h],[-30.9,-3.8, h]]
 
 #gestion fichier
 fichier = open(name_txt_file, "w")#fichier dans le qulle on note les valuers
@@ -52,17 +57,19 @@ print("\x1b\x1b[0m")
 
 
 for img in tout_image:
-
     nom_out_aruco = file_out_aruco_detect + "/" + "aruco_" + img
     nom_out_axe = file_out_axe_detect + "/" + "axe_" + img
     nom_out_detect = file_out_pts_3Dto2D + "/" + "detect_" + img
     nom_out_img_ok = file_out_img_ok + "/" + "ok_" + img
 
     try:
+        list_calib=modul_aruco.calibration_aruco_size(file_imput +"/" + img)
         pos_centre, pos_coin = modul_aruco.find_pos_3d_to_2d_seul_axe(nom_im = file_imput +"/" + img, 
         nom_out_aruco = nom_out_aruco, nom_out_axe = nom_out_axe, nom_out_detect = nom_out_detect, obj_bleu = pts_centre , obj_vert = pts_coin, ecritur=flag_ecritur)
-    
-        pos_coint_reel,W,I = modul_aruco.trouve_pos_exact(pos_coin, name_img = file_imput +"/" + img, name_out = nom_out_img_ok, h = 30, w = 30, aire_min = 30,  aire_max = 70, ecritur=True)
+
+        pos_coint_reel,W,I = modul_aruco.trouve_pos_exact(pos_coin, name_img = file_imput +"/" + img, name_out = nom_out_img_ok, h = int(list_calib[0]), w =int(list_calib[1]), aire_min = int(list_calib[3]),  aire_max = int(list_calib[2]), ecritur=True)
+        #modul_aruco.drawPoseAxis(nom_out_img_ok, nom_out_img_ok, pos_coint_reel, number_of_robots=1)
+        modul_aruco.crop_aruco(file_imput +"/" + img, "cropped_aruco/"+img, robot_2d_points=pos_coint_reel)
         if(W):
             status = "W"
             num_warning += 1
@@ -85,7 +92,7 @@ for img in tout_image:
     except Exception as err:
         i+=1
         num_errors = num_errors + 1
-        print("\x1b[1A\x1b[31;1mimage %s: %s\x1b[0J\x1b[1B\x1b[0m" % (img, "n'a pas pu être trété"))
+        print("\x1b[1A\x1b[31;1mimage %s: %s\x1b[0J\x1b[1B\x1b[0m" % (img, err))
         fichier.write("\nF\t\t\t\t\t" + img + " : \t" +  "pas trouvé")
 
 
